@@ -19,6 +19,10 @@ export default function Page() {
     //       setImageList(reaData.data)
     //       console.log("ImageList Length", imageList.length)
     //     })
+    if(localStorage.getItem("imageList")){
+      localStorage.removeItem("imageList")
+    }
+
     getData()
   }, [])
 
@@ -34,39 +38,67 @@ export default function Page() {
     };
                 
 
-  const getData =  () => {
+  const getData =  async () => {
     // const data = await fetch("http://localhost:3000/api/instagram")
     // console.log("data", data.json())
-    //  if(loadingFlag.current) {return;}
+    if(loadingFlag.current) {return;}
 
     // if(imageList.length >= 50) {return}
     // console.log("currentPageIndex", currentPageIndex.current)
-    
-    // loadingFlag.current = true
-    // if(imageList.length >= 40) {return;}
+    let temp = localStorage.getItem("imageList")
+    if(temp && JSON.parse(temp).length >= 100){
+      return;
+    }
 
-    fetch("http://localhost:3000/api/instagram?start="+ currentPageIndex +"&timestamp=" + new Date().getTime(),{ cache: 'no-cache' })
-        .then(response => response.json())
-        .then(reaData => {
-          console.log("reaData.data", reaData.data)
-          // if(imageList.length >= 50) {return}
-          setImageList(imageList.concat(reaData.data))
-          // console.log("temp Length", imageList.length)
-          // currentPageIndex.current = currentPageIndex.current + 1
-          // console.log("reaData Length", reaData.data.length)
-          // console.log("ImageList Length", temp.concat(reaData.data).length)
-          // loadingFlag.current = false
-          // currentPageIndex.current = currentPageIndex.current + 1
-          // console.log("loadingFlag", loadingFlag)
-        })
-        .catch((err) => {
-          // loadingFlag.current = false
-          console.log(err)
-        })
-        .finally(()=>{
-          // loadingFlag.current = false
-          // clearTimeout(timeoutIndex.current)
-        })
+    loadingFlag.current = true
+
+    // console.log("BASE_URL", (process.env.BASE_URL))
+    const res = await fetch(process.env.BASE_URL + "/api/instagram?start="+ currentPageIndex +"&timestamp=" + new Date().getTime(),{ cache: 'no-cache' })
+    const resData = await res.json()
+    console.log("reaData.data", resData.data)
+    loadingFlag.current = false
+    if(resData && resData.data ){
+      // console.log("data load")
+      // debugger;
+      // const nextItems = [...imageList, ...resData.data];
+      // console.log("data load", [...imageList])
+      // setImageList(imageList.concat(resData.data))
+      if(temp){
+        const newList = JSON.parse(temp).concat(resData.data)
+        setImageList(newList)
+        localStorage.setItem("imageList", JSON.stringify(newList))
+      }
+      else{
+        const newList = [].concat(resData.data)
+        setImageList(newList)
+        localStorage.setItem("imageList", JSON.stringify(newList))
+      }
+      
+      
+    }
+    
+    // fetch(process.env.BASE_URL + "/api/instagram?start="+ currentPageIndex +"&timestamp=" + new Date().getTime(),{ cache: 'no-cache' })
+    //     .then(response => response.json())
+    //     .then(reaData => {
+    //       // console.log("reaData.data", reaData.data)
+    //       // if(imageList.length >= 50) {return}
+    //       setImageList(imageList.concat(reaData.data))
+    //       // console.log("temp Length", imageList.length)
+    //       // currentPageIndex.current = currentPageIndex.current + 1
+    //       // console.log("reaData Length", reaData.data.length)
+    //       // console.log("ImageList Length", temp.concat(reaData.data).length)
+    //       // loadingFlag.current = false
+    //       // currentPageIndex.current = currentPageIndex.current + 1
+    //       // console.log("loadingFlag", loadingFlag)
+    //     })
+    //     .catch((err) => {
+    //       // loadingFlag.current = false
+    //       console.log(err)
+    //     })
+    //     .finally(()=>{
+    //       // loadingFlag.current = false
+    //       // clearTimeout(timeoutIndex.current)
+    //     })
   }
 
   const handleScroll = async (e: Event) => {
@@ -97,7 +129,6 @@ export default function Page() {
     if (scrollHeight && windowHeight && scrollTop && (scrollHeight - windowHeight - scrollTop < 50)) {
       console.log("reload")
       // if(loadingFlag.current) {return;}
-
       
       // await getData()
       // if(timeoutIndex.current && timeoutIndex.current > 0){
@@ -190,11 +221,11 @@ export default function Page() {
       
         </div>
 
-        {/* {
-          imageList.length >= 50 ? (
-            <div className="cursor-pointer text-center text-base mt-2.5">最多加载50条数据</div>
+        {
+          imageList.length >= 100 ? (
+            <div className="cursor-pointer text-center text-base mt-2.5">已经加载最多数据</div>
           ) : ''
-        } */}
+        }
         
       </div>
       
